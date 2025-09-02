@@ -4,7 +4,7 @@ from textnode import TextNode, TextType
 from htmlnode import HTMLNode, LeafNode, ParentNode
 from functions import text_node_to_html_node, split_nodes_delimiter, extract_markdown_images
 from functions import extract_markdown_links, split_nodes_image, split_nodes_link
-from functions import text_to_textnodes, markdown_to_blocks
+from functions import text_to_textnodes, markdown_to_blocks, block_to_block_type, BlockType
 
 class TestTextToHTML(unittest.TestCase):
     def test_text(self):
@@ -180,3 +180,81 @@ This is the same paragraph on a new line
                     "- This is a list\n- with items",
                 ],
             )
+
+class TestBlockToBlockType(unittest.TestCase):
+    def test_heading1(self):
+        md = "# Test"
+        self.assertEqual(block_to_block_type(md), BlockType.HEADING)
+
+    def test_heading2(self):
+        md = "##### Test"
+        self.assertEqual(block_to_block_type(md), BlockType.HEADING)
+    
+    def test_heading3(self):
+        md = "a # Test"
+        self.assertNotEqual(block_to_block_type(md), BlockType.HEADING)
+
+    def test_heading4(self):
+        md = """# Test
+blablablabla
+"""
+        self.assertEqual(block_to_block_type(md), BlockType.HEADING)
+
+    def test_code1(self):
+        md = "```Test```"
+        self.assertEqual(block_to_block_type(md), BlockType.CODE)
+
+    def test_code2(self):
+        md = "```Test``` bla bla bla"
+        self.assertNotEqual(block_to_block_type(md), BlockType.CODE)
+
+    def test_code3(self):
+        md = "bla bla bla ```Test```"
+        self.assertNotEqual(block_to_block_type(md), BlockType.CODE)
+
+    def test_code4(self):
+        md = """```
+bla
+bla
+bla
+```"""
+        self.assertEqual(block_to_block_type(md), BlockType.CODE)
+
+    def test_quote1(self):
+        md = ">Test"
+        self.assertEqual(block_to_block_type(md), BlockType.QUOTE)
+
+    def test_quote2(self):
+        md = """> Test
+> Test
+>Test"""
+        self.assertEqual(block_to_block_type(md), BlockType.QUOTE)
+
+    def test_unordered_list1(self):
+        md = """- Test
+- Test
+- Test"""
+        self.assertEqual(block_to_block_type(md), BlockType.UNORDERED_LIST)
+
+    def test_unordered_list2(self):
+        md = """
+- Test
+- Test
+-Test
+"""
+        self.assertNotEqual(block_to_block_type(md), BlockType.UNORDERED_LIST)
+
+    def test_ordered_list1(self):
+        md = """1. Test
+2. Test
+3. Test
+"""
+        self.assertEqual(block_to_block_type(md), BlockType.ORDERED_LIST)
+
+    def test_ordered_list2(self):
+        md = """
+1. Test
+2. Test
+4. Test
+"""
+        self.assertNotEqual(block_to_block_type(md), BlockType.ORDERED_LIST)

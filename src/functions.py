@@ -1,6 +1,15 @@
 import re
+from enum import Enum
 from textnode import TextNode, TextType
 from htmlnode import HTMLNode, LeafNode, ParentNode
+
+class BlockType(Enum):
+    PARAGRAPH = "paragraph"
+    HEADING = "heading"
+    CODE = "code"
+    QUOTE = "quote"
+    UNORDERED_LIST = "unordered_list"
+    ORDERED_LIST = "ordered_list"
 
 def text_node_to_html_node(text_node):
     if text_node.text_type == TextType.TEXT:
@@ -93,3 +102,18 @@ def text_to_textnodes(text):
 def markdown_to_blocks(markdown):
     blocks = markdown.split("\n\n")
     return [block.strip() for block in blocks if block.strip() != ""]
+
+
+def block_to_block_type(markdown):
+    if re.match(r'#+ ', markdown[:7]):
+        return BlockType.HEADING
+    elif markdown.split("\n")[0].startswith('```') and markdown.split("\n")[-1].endswith('```'):
+        return BlockType.CODE
+    elif all([piece.startswith('>') for piece in markdown.split("\n")]):
+        return BlockType.QUOTE
+    elif all([piece.startswith('- ') for piece in markdown.split("\n")]):
+        return BlockType.UNORDERED_LIST
+    elif all([line.split(". ")[0].isdigit() and int(line.split(". ")[0]) == i+1 for i, line in enumerate(markdown.split("\n")) if line.strip()]):
+        return BlockType.ORDERED_LIST
+    else:
+        return BlockType.PARAGRAPH
