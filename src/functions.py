@@ -1,3 +1,4 @@
+import re
 from textnode import TextNode, TextType
 from htmlnode import HTMLNode, LeafNode, ParentNode
 
@@ -16,3 +17,13 @@ def text_node_to_html_node(text_node):
         return LeafNode(tag="img", value="", props={"src":text_node.url, "alt":text_node.text})
     else:
         raise TypeError("Error: text_node is of invalid TextType!")
+    
+def split_nodes_delimiter(old_nodes, delimiter, text_type):
+    output = []
+    for node in old_nodes:
+        if node.text_type != TextType.TEXT:
+            raise TypeError("Error: Cannot delimit non-text nodes")
+        pieces = node.text.split(delimiter)
+        tmp_result = [TextNode(pieces[i], TextType.TEXT) if i % 2 == 0 else TextNode(pieces[i], text_type) for i in range(len(pieces))]
+        output.extend(tmp_result)
+    return output
