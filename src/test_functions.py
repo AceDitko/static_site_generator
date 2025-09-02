@@ -2,7 +2,8 @@ import unittest
 
 from textnode import TextNode, TextType
 from htmlnode import HTMLNode, LeafNode, ParentNode
-from functions import text_node_to_html_node, split_nodes_delimiter, extract_markdown_images, extract_markdown_links
+from functions import text_node_to_html_node, split_nodes_delimiter, extract_markdown_images
+from functions import extract_markdown_links, split_nodes_image, split_nodes_link
 
 class TestTextToHTML(unittest.TestCase):
     def test_text(self):
@@ -101,3 +102,40 @@ class TestExtractMarkDown(unittest.TestCase):
             "This is text a [link](https://www.google.com)"
         )
         self.assertListEqual([("link", "https://www.google.com")], matches)
+
+class TestSplitNodes(unittest.TestCase):
+    def test_split_images(self):
+        node = TextNode(
+            "This is text with an ![image](https://i.imgur.com/zjjcJKZ.png) and another ![second image](https://i.imgur.com/3elNhQu.png)",
+            TextType.TEXT,
+        )
+        new_nodes = split_nodes_image([node])
+        self.assertListEqual(
+            [
+                TextNode("This is text with an ", TextType.TEXT),
+                TextNode("image", TextType.IMAGE, "https://i.imgur.com/zjjcJKZ.png"),
+                TextNode(" and another ", TextType.TEXT),
+                TextNode(
+                    "second image", TextType.IMAGE, "https://i.imgur.com/3elNhQu.png"
+                ),
+            ],
+            new_nodes,
+        )
+
+    def test_split_links(self):
+        node = TextNode(
+            "This is text with a [link](https://www.google.com) and another [second link](https://www.imgur.com)",
+            TextType.TEXT,
+        )
+        new_nodes = split_nodes_link([node])
+        self.assertListEqual(
+            [
+                TextNode("This is text with a ", TextType.TEXT),
+                TextNode("link", TextType.LINK, "https://www.google.com"),
+                TextNode(" and another ", TextType.TEXT),
+                TextNode(
+                    "second link", TextType.LINK, "https://www.imgur.com"
+                ),
+            ],
+            new_nodes,
+        )

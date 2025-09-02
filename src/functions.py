@@ -38,3 +38,35 @@ def extract_markdown_links(text):
     #return [(match.split("]")[0]+"]", match.split("]")[1]) for match in matches]
     return [(match[0], match[1]) for match in matches]
     
+def split_nodes_image(old_nodes):
+    output = []
+    for node in old_nodes:
+        if node.text_type != TextType.TEXT:
+            raise TypeError("Error: Cannot delimit non-text nodes")
+        pieces = re.split(r'!\[([^\[\]]*)\]\(([^\(\)]*)\)', node.text)
+        tmp_result = []
+        for i in range(0, len(pieces)-1, 3):
+            if pieces[i]:
+                tmp_result.append(TextNode(pieces[i], TextType.TEXT))
+            tmp_result.append(TextNode(pieces[i+1], TextType.IMAGE, pieces[i+2]))
+        if len(pieces) % 3 == 1 and pieces[-1]:
+            tmp_result.append(TextNode(pieces[-1], TextType.TEXT))
+        output.extend(tmp_result)
+    return output
+    
+
+def split_nodes_link(old_nodes):
+    output = []
+    for node in old_nodes:
+        if node.text_type != TextType.TEXT:
+            raise TypeError("Error: Cannot delimit non-text nodes")
+        pieces = re.split(r'(?<!!)\[([^\[\]]*)\]\(([^\(\)]*)\)', node.text)
+        tmp_result = []
+        for i in range(0, len(pieces)-1, 3):
+            if pieces[i]:
+                tmp_result.append(TextNode(pieces[i], TextType.TEXT))
+            tmp_result.append(TextNode(pieces[i+1], TextType.LINK, pieces[i+2]))
+        if len(pieces) % 3 == 1 and pieces[-1]:
+            tmp_result.append(TextNode(pieces[-1], TextType.TEXT))
+        output.extend(tmp_result)
+    return output
