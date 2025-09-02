@@ -22,7 +22,9 @@ def split_nodes_delimiter(old_nodes, delimiter, text_type):
     output = []
     for node in old_nodes:
         if node.text_type != TextType.TEXT:
-            raise TypeError("Error: Cannot delimit non-text nodes")
+        #    raise TypeError("Error: Cannot delimit non-text nodes")
+            output.append(node)
+            continue
         pieces = node.text.split(delimiter)
         tmp_result = [TextNode(pieces[i], TextType.TEXT) if i % 2 == 0 else TextNode(pieces[i], text_type) for i in range(len(pieces))]
         output.extend(tmp_result)
@@ -30,19 +32,19 @@ def split_nodes_delimiter(old_nodes, delimiter, text_type):
 
 def extract_markdown_images(text):
     matches = re.findall(r"!\[([^\[\]]*)\]\(([^\(\)]*)\)", text)
-    #return [(match.split("]")[0]+"]", match.split("]")[1]) for match in matches]
     return [(match[0], match[1]) for match in matches]
 
 def extract_markdown_links(text):
     matches = re.findall(r"(?<!!)\[([^\[\]]*)\]\(([^\(\)]*)\)", text)
-    #return [(match.split("]")[0]+"]", match.split("]")[1]) for match in matches]
     return [(match[0], match[1]) for match in matches]
     
 def split_nodes_image(old_nodes):
     output = []
     for node in old_nodes:
         if node.text_type != TextType.TEXT:
-            raise TypeError("Error: Cannot delimit non-text nodes")
+        #    raise TypeError("Error: Cannot delimit non-text nodes")
+            output.append(node)
+            continue
         pieces = re.split(r'!\[([^\[\]]*)\]\(([^\(\)]*)\)', node.text)
         tmp_result = []
         for i in range(0, len(pieces)-1, 3):
@@ -59,7 +61,9 @@ def split_nodes_link(old_nodes):
     output = []
     for node in old_nodes:
         if node.text_type != TextType.TEXT:
-            raise TypeError("Error: Cannot delimit non-text nodes")
+            #raise TypeError("Error: Cannot delimit non-text nodes")
+            output.append(node)
+            continue
         pieces = re.split(r'(?<!!)\[([^\[\]]*)\]\(([^\(\)]*)\)', node.text)
         tmp_result = []
         for i in range(0, len(pieces)-1, 3):
@@ -69,4 +73,13 @@ def split_nodes_link(old_nodes):
         if len(pieces) % 3 == 1 and pieces[-1]:
             tmp_result.append(TextNode(pieces[-1], TextType.TEXT))
         output.extend(tmp_result)
+    return output
+
+def text_to_textnodes(text):
+    output = [TextNode(text, TextType.TEXT)]
+    output = split_nodes_delimiter(output, "**", TextType.BOLD)
+    output = split_nodes_delimiter(output, "_", TextType.ITALIC)
+    output = split_nodes_delimiter(output, "`", TextType.CODE)
+    output = split_nodes_image(output)
+    output = split_nodes_link(output)
     return output
