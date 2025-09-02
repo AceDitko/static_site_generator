@@ -18,6 +18,7 @@ def text_node_to_html_node(text_node):
     else:
         raise TypeError("Error: text_node is of invalid TextType!")
     
+
 def split_nodes_delimiter(old_nodes, delimiter, text_type):
     output = []
     for node in old_nodes:
@@ -30,14 +31,17 @@ def split_nodes_delimiter(old_nodes, delimiter, text_type):
         output.extend(tmp_result)
     return output
 
+
 def extract_markdown_images(text):
     matches = re.findall(r"!\[([^\[\]]*)\]\(([^\(\)]*)\)", text)
     return [(match[0], match[1]) for match in matches]
 
+
 def extract_markdown_links(text):
     matches = re.findall(r"(?<!!)\[([^\[\]]*)\]\(([^\(\)]*)\)", text)
     return [(match[0], match[1]) for match in matches]
-    
+
+
 def split_nodes_image(old_nodes):
     output = []
     for node in old_nodes:
@@ -75,6 +79,7 @@ def split_nodes_link(old_nodes):
         output.extend(tmp_result)
     return output
 
+
 def text_to_textnodes(text):
     output = [TextNode(text, TextType.TEXT)]
     output = split_nodes_delimiter(output, "**", TextType.BOLD)
@@ -83,3 +88,8 @@ def text_to_textnodes(text):
     output = split_nodes_image(output)
     output = split_nodes_link(output)
     return output
+
+
+def markdown_to_blocks(markdown):
+    blocks = markdown.split("\n\n")
+    return [block.strip() for block in blocks if block.strip() != ""]
