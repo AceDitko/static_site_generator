@@ -100,4 +100,4 @@ class TestExtractMarkDown(unittest.TestCase):
         matches = extract_markdown_links(
             "This is text a [link](https://www.google.com)"
         )
-        self.assertListEqual([("link", "https://www.google.com")])
+        self.assertListEqual([("link", "https://www.google.com")], matches)
