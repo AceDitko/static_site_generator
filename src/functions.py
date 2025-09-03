@@ -174,7 +174,7 @@ def text_to_children(text):
         raise ValueError(f"Error - Invalid inline markdown: {e}")
     
 
-def publish_static(source="static", destination="public"):
+def publish_static(source="static", destination="docs"):
     source_path = os.path.abspath(source)
     destination_path = os.path.abspath(destination)
 
@@ -206,7 +206,7 @@ def extract_title(markdown):
         return title_lines[0][2:].strip()
 
 
-def generate_page(from_path, template_path, dest_path):
+def generate_page(from_path, template_path, dest_path, basepath):
     if not os.path.exists(from_path):
         raise ValueError(f"Error: from_path '{from_path}' does not exist!")
     if not os.path.exists(template_path):
@@ -230,13 +230,17 @@ def generate_page(from_path, template_path, dest_path):
     template_content = template_content.replace('{{ Title }}', title)
     template_content = template_content.replace('{{ Content }}', file_content_html)
 
+    if basepath != "/":
+        template_content = template_content.replace('href="/', f'href="{basepath}')
+        template_content = template_content.replace('src="/', f'src="{basepath}')
+
     if not os.path.exists(os.path.dirname(dest_path)):
         os.makedirs(os.path.dirname(dest_path), exist_ok=True)
 
     with open(dest_path, "w") as d:
         d.write(template_content)
 
-def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
+def generate_pages_recursive(dir_path_content, template_path, dest_dir_path, basepath="/"):
     if not os.path.exists(dir_path_content):
         raise ValueError(f"Error: dir_path_content '{dir_path_content}' does not exist!")
     if not os.path.exists(template_path):
@@ -257,7 +261,7 @@ def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
                 new_item = item.removesuffix('.md')
                 new_item += '.html'
                 dst_child = os.path.join(dest_dir_path, new_item)
-                generate_page(src_child, template_path, dst_child)
+                generate_page(src_child, template_path, dst_child, basepath)
             else:
                 shutil.copy(src_child, dst_child)
         else:
