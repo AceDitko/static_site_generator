@@ -174,17 +174,6 @@ def text_to_children(text):
         raise ValueError(f"Error - Invalid inline markdown: {e}")
     
 
-def copy_dir(src, dst):
-    for item in os.listdir(src):
-        src_child = os.path.join(src, item)
-        dst_child = os.path.join(dst, item)
-        if os.path.isfile(src_child):
-            shutil.copy(src_child, dst_child)
-        elif os.path.isdir(src_child):
-            os.makedirs(dst_child, exist_ok=True)
-            copy_dir(src_child, dst_child)
-
-
 def publish_static(source="static", destination="public"):
     source_path = os.path.abspath(source)
     destination_path = os.path.abspath(destination)
@@ -197,6 +186,15 @@ def publish_static(source="static", destination="public"):
 
     os.makedirs(destination_path, exist_ok=True)
 
+    def copy_dir(src, dst):
+        for item in os.listdir(src):
+            src_child = os.path.join(src, item)
+            dst_child = os.path.join(dst, item)
+            if os.path.isfile(src_child):
+                shutil.copy(src_child, dst_child)
+            elif os.path.isdir(src_child):
+                os.makedirs(dst_child, exist_ok=True)
+                copy_dir(src_child, dst_child)
     copy_dir(source_path, destination_path)
 
 
@@ -238,3 +236,30 @@ def generate_page(from_path, template_path, dest_path):
     with open(dest_path, "w") as d:
         d.write(template_content)
 
+def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
+    if not os.path.exists(dir_path_content):
+        raise ValueError(f"Error: dir_path_content '{dir_path_content}' does not exist!")
+    if not os.path.exists(template_path):
+        raise ValueError(f"Error: template_path '{template_path}' does not exist!")
+    if not os.path.isdir(dir_path_content):
+        raise ValueError(f"Error: {dir_path_content} does not point to a directory!")
+    if not os.path.isfile(template_path):
+        raise ValueError(f"Error: {template_path} does not point to a valid file!")
+    
+    if not os.path.exists(os.path.abspath(dest_dir_path)):
+        os.makedirs(os.path.abspath(dest_dir_path), exist_ok=True)
+
+    for item in os.listdir(dir_path_content):
+        src_child = os.path.join(dir_path_content, item)
+        dst_child = os.path.join(dest_dir_path, item)
+        if os.path.isfile(src_child):
+            if '.md' in item:
+                new_item = item.removesuffix('.md')
+                new_item += '.html'
+                dst_child = os.path.join(dest_dir_path, new_item)
+                generate_page(src_child, template_path, dst_child)
+            else:
+                shutil.copy(src_child, dst_child)
+        else:
+            os.makedirs(dst_child, exist_ok=True)
+            generate_pages_recursive(src_child, template_path, dst_child)
