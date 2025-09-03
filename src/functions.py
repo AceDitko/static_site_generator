@@ -229,10 +229,8 @@ def generate_page(from_path, template_path, dest_path, basepath):
 
     template_content = template_content.replace('{{ Title }}', title)
     template_content = template_content.replace('{{ Content }}', file_content_html)
-
-    if basepath != "/":
-        template_content = template_content.replace('href="/', f'href="{basepath}')
-        template_content = template_content.replace('src="/', f'src="{basepath}')
+    template_content = template_content.replace('href="/', f'href="{basepath}')
+    template_content = template_content.replace('src="/', f'src="{basepath}')
 
     if not os.path.exists(os.path.dirname(dest_path)):
         os.makedirs(os.path.dirname(dest_path), exist_ok=True)
@@ -240,7 +238,7 @@ def generate_page(from_path, template_path, dest_path, basepath):
     with open(dest_path, "w") as d:
         d.write(template_content)
 
-def generate_pages_recursive(dir_path_content, template_path, dest_dir_path, basepath="/"):
+def generate_pages_recursive(dir_path_content, template_path, dest_dir_path, basepath):
     if not os.path.exists(dir_path_content):
         raise ValueError(f"Error: dir_path_content '{dir_path_content}' does not exist!")
     if not os.path.exists(template_path):
@@ -266,4 +264,4 @@ def generate_pages_recursive(dir_path_content, template_path, dest_dir_path, bas
                 shutil.copy(src_child, dst_child)
         else:
             os.makedirs(dst_child, exist_ok=True)
-            generate_pages_recursive(src_child, template_path, dst_child)
+            generate_pages_recursive(src_child, template_path, dst_child, basepath)
