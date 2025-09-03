@@ -1,7 +1,11 @@
 import re
+import os
+import shutil
+
 from enum import Enum
 from textnode import TextNode, TextType
 from htmlnode import HTMLNode, LeafNode, ParentNode
+
 
 class BlockType(Enum):
     PARAGRAPH = "paragraph"
@@ -168,3 +172,32 @@ def text_to_children(text):
         return children
     except Exception as e:
         raise ValueError(f"Error - Invalid inline markdown: {e}")
+    
+
+def publish_static(source="static", destination="public"):
+    source_path = os.path.abspath(source)
+    destination_path = os.path.abspath(destination)
+
+    if not os.path.isdir(source_path):
+        raise ValueError('Error: Invalid source directory - source path is not a directory!')
+    
+    if os.path.exists(destination_path):
+        shutil.rmtree(destination_path)
+
+    os.makedirs(destination_path, exist_ok=True)
+
+    def copy_dir(src, dst):
+        for item in os.listdir(src):
+            src_child = os.path.join(src, item)
+            dst_child = os.path.join(dst, item)
+            if os.path.isfile(src_child):
+                shutil.copy(src_child, dst_child)
+            elif os.path.isdir(src_child):
+                os.makedirs(dst_child, exist_ok=True)
+                copy_dir(src_child, dst_child)
+
+    copy_dir(source_path, destination_path)
+
+
+    
+
