@@ -174,6 +174,17 @@ def text_to_children(text):
         raise ValueError(f"Error - Invalid inline markdown: {e}")
     
 
+def copy_dir(src, dst):
+    for item in os.listdir(src):
+        src_child = os.path.join(src, item)
+        dst_child = os.path.join(dst, item)
+        if os.path.isfile(src_child):
+            shutil.copy(src_child, dst_child)
+        elif os.path.isdir(src_child):
+            os.makedirs(dst_child, exist_ok=True)
+            copy_dir(src_child, dst_child)
+
+
 def publish_static(source="static", destination="public"):
     source_path = os.path.abspath(source)
     destination_path = os.path.abspath(destination)
@@ -186,16 +197,6 @@ def publish_static(source="static", destination="public"):
 
     os.makedirs(destination_path, exist_ok=True)
 
-    def copy_dir(src, dst):
-        for item in os.listdir(src):
-            src_child = os.path.join(src, item)
-            dst_child = os.path.join(dst, item)
-            if os.path.isfile(src_child):
-                shutil.copy(src_child, dst_child)
-            elif os.path.isdir(src_child):
-                os.makedirs(dst_child, exist_ok=True)
-                copy_dir(src_child, dst_child)
-
     copy_dir(source_path, destination_path)
 
 
@@ -206,5 +207,34 @@ def extract_title(markdown):
     else:
         return title_lines[0][2:].strip()
 
+
+def generate_page(from_path, template_path, dest_path):
+    if not os.path.exists(from_path):
+        raise ValueError(f"Error: from_path '{from_path}' does not exist!")
+    if not os.path.exists(template_path):
+        raise ValueError(f"Error: template_path '{template_path}' does not exist!")
+    if not os.path.isfile(from_path):
+        raise ValueError(f"Error: {from_path} does not point to a valid file!")
+    if not os.path.isfile(template_path):
+        raise ValueError(f"Error: {template_path} does not point to a valid file!")
     
+    print(f"Generating page from {from_path} to {dest_path} using {template_path}")
+
+    with open(from_path, "r") as f:
+        file_content = f.read()
+
+    with open(template_path, "r") as t:
+        template_content = t.read()
+    
+    file_content_html = markdown_to_html_node(file_content).to_html()
+    title = extract_title(file_content)
+
+    template_content = template_content.replace('{{ Title }}', title)
+    template_content = template_content.replace('{{ Content }}', file_content_html)
+
+    if not os.path.exists(os.path.dirname(dest_path)):
+        os.makedirs(os.path.dirname(dest_path), exist_ok=True)
+
+    with open(dest_path, "w") as d:
+        d.write(template_content)
 
