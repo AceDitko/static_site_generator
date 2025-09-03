@@ -117,3 +117,54 @@ def block_to_block_type(markdown):
         return BlockType.ORDERED_LIST
     else:
         return BlockType.PARAGRAPH
+    
+
+def markdown_to_html_node(markdown):
+    blocks = markdown_to_blocks(markdown)
+    children = []
+    for block in blocks:
+        block_type = block_to_block_type(block)
+        if block_type == BlockType.PARAGRAPH:
+            lines = block.split("\n")
+            text = " ".join(line.strip() for line in lines if line.strip() != "")
+            p_children = text_to_children(text)
+            children.append(ParentNode("p",p_children))
+        elif block_type == BlockType.HEADING:
+            line = block.split("\n", 1)[0]
+            pieces = line.split(" ")
+            level = len(pieces[0])
+            text = " ".join(pieces[1:]).strip()
+            p_children = text_to_children(text)
+            children.append(ParentNode(f"h{level}",p_children))
+        elif block_type == BlockType.CODE:
+            lines = block.split("\n")
+            inner = "\n".join(lines[1:-1])
+            if block.endswith("\n```"):
+                inner += "\n"
+            code_leaf = LeafNode("code", inner)
+            children.append(ParentNode("pre",[code_leaf]))
+        elif block_type == BlockType.QUOTE:
+            lines = block.split("\n")
+            stripped = [re.sub(r"^>\s?", "", l) for l in lines]
+            text = " ".join(s.strip() for s in stripped if s.strip())
+            children.append(ParentNode("blockquote", text_to_children(text)))
+        elif block_type == BlockType.UNORDERED_LIST:
+            items =  [re.sub(r"^-\s", "", l, count=1).strip() for l in block.split("\n")]
+            list_nodes = [ParentNode("li", text_to_children(t)) for t in items if t]
+            children.append(ParentNode("ul",list_nodes))
+        elif block_type == BlockType.ORDERED_LIST:
+            items = [re.sub(r"^\d+\.\s", "", l, count=1).strip() for l in block.split("\n")]
+            list_nodes = [ParentNode("li", text_to_children(t)) for t in items if t]
+            children.append(ParentNode("ol", list_nodes))
+    return ParentNode("div", children)
+
+
+def text_to_children(text):
+    if text.strip() == "":
+        return []
+    try:
+        text_nodes = text_to_textnodes(text)
+        children = [text_node_to_html_node(node) for node in text_nodes if node.text != ""]
+        return children
+    except Exception as e:
+        raise ValueError(f"Error - Invalid inline markdown: {e}")
