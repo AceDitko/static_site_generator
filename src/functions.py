@@ -199,5 +199,12 @@ def publish_static(source="static", destination="public"):
     copy_dir(source_path, destination_path)
 
 
+def extract_title(markdown):
+    title_lines = [line for line in markdown.split("\n") if line.startswith('# ')]
+    if len(title_lines) < 1:
+        raise Exception("Error: no title detected!")
+    else:
+        return title_lines[0][2:].strip()
+
     
 

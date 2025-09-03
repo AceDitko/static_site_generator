@@ -3,7 +3,7 @@ import unittest
 from textnode import TextNode, TextType
 from htmlnode import HTMLNode, LeafNode, ParentNode
 from functions import text_node_to_html_node, split_nodes_delimiter, extract_markdown_images
-from functions import extract_markdown_links, split_nodes_image, split_nodes_link
+from functions import extract_markdown_links, split_nodes_image, split_nodes_link, extract_title
 from functions import text_to_textnodes, markdown_to_blocks, block_to_block_type, BlockType, markdown_to_html_node
 
 class TestTextToHTML(unittest.TestCase):
@@ -291,3 +291,23 @@ the **same** even with inline stuff
             html,
             "<div><pre><code>This is text that _should_ remain\nthe **same** even with inline stuff\n</code></pre></div>",
         )
+
+class TestExtractTitle(unittest.TestCase):
+    def test_extract_title1(self):
+        md = '# Title'
+        self.assertEqual('Title', extract_title(md))
+
+    def test_extract_title2(self):
+        md = """
+## This is not the title
+# This is the title
+"""
+
+        self.assertEqual('This is the title', extract_title(md))
+
+    def test_extract_title3(self):
+        md = """
+# If there is more than one title
+# Use the first title
+"""
+        self.assertEqual('If there is more than one title', extract_title(md))
